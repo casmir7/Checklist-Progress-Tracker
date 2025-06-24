@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Checklist Progress (with Save)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 8px;
+    }
+
+    button {
+      padding: 8px 12px;
+      background-color: #2196f3;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    button.remove-btn {
+      background-color: #f44336;
+      margin-left: 10px;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 20px;
+    }
+
+    li {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .progress-container {
+      background-color: #eee;
+      border-radius: 5px;
+      overflow: hidden;
+      height: 20px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background-color: #4caf50;
+      width: 0%;
+      transition: width 0.4s ease-in-out;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Progress Bar by Casmir</h2>
+
+  <form id="taskForm">
+    <input type="text" id="taskInput" placeholder="Add a task" required />
+    <button type="submit">Add</button>
+  </form>
+
+  <ul id="taskList"></ul>
+
+  <div class="progress-container">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('taskForm');
+    const input = document.getElementById('taskInput');
+    const list = document.getElementById('taskList');
+    const progressBar = document.getElementById('progressFill');
+
+    // Load saved tasks from localStorage
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('checklist');
+      if (saved) {
+        const tasks = JSON.parse(saved);
+        tasks.forEach(task => addTask(task.text, task.checked));
+      }
+    });
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const taskText = input.value.trim();
+      if (taskText !== "") {
+        addTask(taskText, false);
+        input.value = '';
+        saveTasks();
+      }
+    });
+
+    function addTask(text, isChecked) {
+      const li = document.createElement('li');
+
+      const left = document.createElement('div');
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = isChecked;
+      checkbox.addEventListener('change', () => {
+        updateProgress();
+        saveTasks();
+      });
+
+      const label = document.createElement('span');
+      label.textContent = " " + text;
+
+      left.appendChild(checkbox);
+      left.appendChild(label);
+      left.style.flex = "1";
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'remove-btn';
+      removeBtn.textContent = 'Remove';
+      removeBtn.onclick = () => {
+        li.remove();
+        updateProgress();
+        saveTasks();
+      };
+
+      li.appendChild(left);
+      li.appendChild(removeBtn);
+      list.appendChild(li);
+
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const items = list.querySelectorAll('input[type="checkbox"]');
+      const checked = list.querySelectorAll('input[type="checkbox"]:checked');
+      const percent = items.length ? (checked.length / items.length) * 100 : 0;
+      progressBar.style.width = percent + '%';
+    }
+
+    function saveTasks() {
+      const tasks = [];
+      list.querySelectorAll('li').forEach(li => {
+        const text = li.querySelector('span').textContent.trim();
+        const checked = li.querySelector('input').checked;
+        tasks.push({ text, checked });
+      });
+      localStorage.setItem('checklist', JSON.stringify(tasks));
+    }
+  </script>
+
+</body>
+</html>
